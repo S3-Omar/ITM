@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: . # Ruta donde está tu Dockerfile
+      dockerfile: Dockerfile
+    container_name: backend_api
+    ports:
+      - "5000:5000" # Mapea el puerto 5000 del host al contenedor
+    environment:
+      - MONGO_URI=mongodb://<IP_SERVIDOR_MONGO>:27017/<NOMBRE_BASE_DATOS>
+    depends_on:
+      - wait-for-mongo # Asegura que el contenedor espera a que el servidor MongoDB esté disponible
+    networks:
+      - app_network
+
+  wait-for-mongo:
+    image: alpine:latest
+    container_name: wait-for-mongo
+    entrypoint: >
+      /bin/sh -c "
+      apk add --no-cache curl &&
+      while ! curl --silent <IP_SERVIDOR_MONGO>:27017; do sleep 2; done &&
+      echo 'MongoDB está listo';
+      "
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
